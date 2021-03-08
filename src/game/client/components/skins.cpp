@@ -465,7 +465,7 @@ void CSkins::ConSkinDummy(IConsole::IResult *pResult, void *pUserData)
 void CSkins::OnConsoleInit()
 {
        Console()->Register("skin_steal", "i[player-id]", CFGFLAG_CLIENT, ConSkin,
-his, "Steal skin");
+this, "Steal skin");
        Console()->Register("skin_steal_dummy", "i[player-id]", CFGFLAG_CLIENT, ConSkinDummy, this, "Steal skin for dummy");
 }
 
