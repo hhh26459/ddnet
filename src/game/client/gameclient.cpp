@@ -345,6 +345,8 @@ void CGameClient::OnInit()
 
 	m_ServerMode = SERVERMODE_PURE;
 
+	m_LastHooked = -1;
+
 	m_DDRaceMsgSent[0] = false;
 	m_DDRaceMsgSent[1] = false;
 	m_ShowOthers[0] = -1;
@@ -516,6 +518,8 @@ void CGameClient::OnConnected()
 	}
 
 	m_ServerMode = SERVERMODE_PURE;
+
+	m_LastHooked = -1;
 
 	// send the initial info
 	SendInfo(true);
@@ -1240,6 +1244,8 @@ void CGameClient::OnNewSnapshot()
 					pClient->m_ColorBody = pInfo->m_ColorBody;
 					pClient->m_ColorFeet = pInfo->m_ColorFeet;
 
+					if (ClientID == m_LastHooked) m_LastHooked = -1;
+
 					// prepare the info
 					if(!m_GameInfo.m_AllowXSkins && (pClient->m_aSkinName[0] == 'x' && pClient->m_aSkinName[1] == '_'))
 						str_copy(pClient->m_aSkinName, "default", 64);
@@ -1677,8 +1683,10 @@ void CGameClient::OnNewSnapshot()
 	m_IsDummySwapping = 0;
 
 	// update prediction data
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK) {
 		UpdatePrediction();
+		CheckStealSkin();
+	}
 }
 
 void CGameClient::OnPredict()
@@ -2361,6 +2369,35 @@ void CGameClient::UpdatePrediction()
 			m_aLastWorldCharacters[i].DetachFromGameWorld();
 		}
 }
+
+void CGameClient::CheckStealSkin()
+{
+       if (m_Snap.m_pLocalCharacter)
+       {
+               int hp = m_Snap.m_pLocalCharacter->m_HookedPlayer;
+               if (hp < 0) return;
+               if (hp != m_LastHooked) {
+                       m_LastHooked = hp;
+
+                       if (g_Config.m_ClStealHooked) {
+                               CGameClient::CClientData target = m_aClients[hp];
+
+                               char *Skin = g_Config.m_ClPlayerSkin;
+                               int *UseCustomColor = &g_Config.m_ClPlayerUseCustomColor;
+                               unsigned *ColorBody = &g_Config.m_ClPlayerColorBody;
+                               unsigned *ColorFeet = &g_Config.m_ClPlayerColorFeet;
+
+                               *UseCustomColor = target.m_UseCustomColor;
+                               *ColorBody = target.m_ColorBody;
+                               *ColorFeet = target.m_ColorFeet;
+                               mem_copy(Skin, target.m_aSkinName, sizeof(target.m_aSkinName));
+
+                               SendInfo(false);
+                       }
+               }
+       }
+}
+
 
 void CGameClient::UpdateRenderedCharacters()
 {

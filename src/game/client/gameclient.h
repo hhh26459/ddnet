@@ -176,6 +176,9 @@ public:
 		SERVERMODE_PUREMOD,
 	};
 	int m_ServerMode;
+	
+	int m_LastHooked;
+
 	CGameInfo m_GameInfo;
 
 	int m_DemoSpecID;
@@ -578,6 +581,8 @@ private:
 	void UpdateRenderedCharacters();
 	void DetectStrongHook();
 	vec2 GetSmoothPos(int ClientID);
+
+	void CheckStealSkin();
 
 	int m_PredictedDummyID;
 	int m_IsDummySwapping;
